@@ -8,6 +8,14 @@
     <result column="email" jdbcType="VARCHAR" property="email" />
     <result column="d_id" jdbcType="INTEGER" property="dId" />
   </resultMap>
+
+  <resultMap id="WithDeptResultMap" type="com.sbx.bean.Employee" extends="BaseResultMap">
+    <association property="department" javaType="com.sbx.bean.Department">
+      <id column="dept_id" jdbcType="INTEGER" property="deptId" />
+      <result column="dept_name" jdbcType="VARCHAR" property="deptName" />
+    </association>
+  </resultMap>
+
   <sql id="Example_Where_Clause">
     <where>
       <foreach collection="oredCriteria" item="criteria" separator="or">
@@ -69,6 +77,11 @@
   <sql id="Base_Column_List">
     emp_id, emp_name, gender, email, d_id
   </sql>
+
+  <sql id="WithDept_Column_List">
+    emp.emp_id, emp.emp_name, emp.gender, emp.email, emp.d_id,dept.dept_id,dept.dept_name
+  </sql>
+
   <select id="selectByExample" parameterType="com.sbx.bean.EmployeeExample" resultMap="BaseResultMap">
     select
     <if test="distinct">
@@ -84,19 +97,20 @@
     </if>
   </select>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
-    select 
-    <include refid="Base_Column_List" />
+    select
+    <include refid="Base_Column_List"/>
     from tbl_emp
     where emp_id = #{empId,jdbcType=INTEGER}
   </select>
   <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
-    delete from tbl_emp
+    delete
+    from tbl_emp
     where emp_id = #{empId,jdbcType=INTEGER}
   </delete>
   <delete id="deleteByExample" parameterType="com.sbx.bean.EmployeeExample">
     delete from tbl_emp
     <if test="_parameter != null">
-      <include refid="Example_Where_Clause" />
+      <include refid="Example_Where_Clause"/>
     </if>
   </delete>
   <insert id="insert" parameterType="com.sbx.bean.Employee">
@@ -208,4 +222,29 @@
       d_id = #{dId,jdbcType=INTEGER}
     where emp_id = #{empId,jdbcType=INTEGER}
   </update>
+
+  <!--  List<Employee> selectByExampleWithDept(EmployeeExample example);-->
+  <select id="selectByExampleWithDept" parameterType="com.sbx.bean.EmployeeExample" resultMap="WithDeptResultMap">
+    select
+    <if test="distinct">
+      distinct
+    </if>
+    <include refid="WithDept_Column_List"/>
+    from tbl_emp emp
+    left join tbl_dept dept on emp.d_id=dept.dept_id
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause"/>
+    </if>
+    <if test="orderByClause != null">
+      order by ${orderByClause}
+    </if>
+  </select>
+  <!-- Employee selectByPrimaryKeyWithDept(Integer empId);-->
+  <select id="selectByPrimaryKeyWithDept" parameterType="java.lang.Integer" resultMap="WithDeptResultMap">
+    select
+    <include refid="WithDept_Column_List"/>
+    from tbl_emp  emp
+    left join tbl_dept dept on emp.d_id=dept.dept_id
+    where emp_id = #{empId,jdbcType=INTEGER}
+  </select>
 </mapper>
