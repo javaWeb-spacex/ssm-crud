@@ -23,6 +23,11 @@ public class DeptmentController {
     @Autowired
     private DepartmentService departmentService;
 
+    /**
+     * 获取部门信息
+     * @return
+     * @throws InterruptedException
+     */
     @ResponseBody
     @RequestMapping("/depts")
     public Msg getDepts() throws InterruptedException {
@@ -30,5 +35,4 @@ public class DeptmentController {
         List<Department> depts=departmentService.getDepts();
         return Msg.success().add("depts",depts);
     }
-
 }

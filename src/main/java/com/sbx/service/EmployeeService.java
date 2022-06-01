@@ -20,4 +20,8 @@ public interface EmployeeService {
     Employee getEmpById(Integer empId);
 
     Integer UpdateEmp(Employee employee);
+
+    Integer deleteEmpById(Integer empId);
+
+    Integer deleteeBatch(List<Integer> empIds);
 }

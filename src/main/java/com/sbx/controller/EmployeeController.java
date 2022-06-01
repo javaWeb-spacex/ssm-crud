@@ -6,14 +6,13 @@ import com.sbx.bean.Employee;
 import com.sbx.bean.Msg;
 import com.sbx.service.EmployeeService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -91,7 +90,6 @@ public class EmployeeController {
         }else{
             return Msg.fail().add("va_msg","用户名不可用");
         }
-
     }
 
     /**
@@ -110,28 +108,54 @@ public class EmployeeController {
 
     /**
      * 员工更新方法
+     *
      * @param employee
      * @param result
      * @return
      */
     @ResponseBody
     @PutMapping("/emp/{empId}")
-    public Msg UpdateEmp(@Valid Employee employee, BindingResult result, HttpServletRequest request) {
+    public Msg UpdateEmp(@Valid Employee employee, BindingResult result) {
         //如果有数据校验失败
-        if(result.hasErrors()){
+        if (result.hasErrors()) {
             //校验失败以后应该返回失败，在模态框中显示校验失败的错误信息
             HashMap<String, Object> map = new HashMap<>();
             List<FieldError> fieldErrors = result.getFieldErrors();
-            for (FieldError fieldError:fieldErrors) {
-                System.out.println("错误的字段名"+fieldError.getField());
-                System.out.println("错误信息"+fieldError.getDefaultMessage());
-                map.put(fieldError.getField(),fieldError.getDefaultMessage());
+            for (FieldError fieldError : fieldErrors) {
+                System.out.println("错误的字段名" + fieldError.getField());
+                System.out.println("错误信息" + fieldError.getDefaultMessage());
+                map.put(fieldError.getField(), fieldError.getDefaultMessage());
             }
-            return Msg.fail().add("errorFields",map);
-        }else{
+            return Msg.fail().add("errorFields", map);
+        } else {
             Integer count = employeeService.UpdateEmp(employee);
             return Msg.success();
         }
+    }
+
+    /**
+     * 单个批量删除二合一
+     * @param empIds
+     * @return
+     */
+    @ResponseBody
+    @DeleteMapping("/emp/{empIds}")
+    public Msg deleteEmpById(@PathVariable("empIds") String empIds) {
+        //empIds 判空
+        if ("".equals(empIds) || empIds == null) {
+            return Msg.fail().add("msg", "empIds不能为空");
+        }
+        if (empIds.contains(",")) {
+            List<Integer> del_empIds=new ArrayList<>();
+            String[] str_empids = empIds.split(",");
+            for (String item:str_empids) {
+                del_empIds.add(Integer.parseInt(item));
+            }
+            employeeService.deleteeBatch(del_empIds);
+            return Msg.success().add("msg","批量删除成功");
+        }
+        Integer result = employeeService.deleteEmpById(Integer.parseInt(empIds));
+        return Msg.success().add("msg","单个删除成功");
     }
 
 //    @RequestMapping("/emps")
