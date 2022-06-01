@@ -39,4 +39,14 @@ public class EmployeeServiceImpl implements EmployeeService {
         long count = employeeMapper.countByExample(employeeExample);
         return count == 0;
     }
+
+    @Override
+    public Employee getEmpById(Integer empId) {
+        return employeeMapper.selectByPrimaryKey(empId);
+    }
+
+    @Override
+    public Integer UpdateEmp(Employee employee) {
+        return employeeMapper.updateByPrimaryKeySelective(employee);
+    }
 }

@@ -51,11 +51,20 @@
 
     <!--使用Rest风格的URI,将普通的post转为put、delete-->
     <filter>
-        <filter-name>hiddenHttpMethodFilter</filter-name>
+        <filter-name>HiddenHttpMethodFilter</filter-name>
         <filter-class>org.springframework.web.filter.HiddenHttpMethodFilter</filter-class>
     </filter>
     <filter-mapping>
-        <filter-name>hiddenHttpMethodFilter</filter-name>
+        <filter-name>HiddenHttpMethodFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+    <!--针对ajax直接发PUT请求不封装请求体进行修复-->
+    <filter>
+        <filter-name>FormContentFilter</filter-name>
+        <filter-class>org.springframework.web.filter.FormContentFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>FormContentFilter</filter-name>
         <url-pattern>/*</url-pattern>
     </filter-mapping>
 

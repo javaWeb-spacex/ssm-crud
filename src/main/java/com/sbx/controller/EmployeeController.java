@@ -6,11 +6,13 @@ import com.sbx.bean.Employee;
 import com.sbx.bean.Msg;
 import com.sbx.service.EmployeeService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.util.HashMap;
 import java.util.List;
@@ -67,8 +69,9 @@ public class EmployeeController {
             Integer count = employeeService.saveEmp(employee);
             return Msg.success();
         }
-
     }
+
+
 
     /**
      * 检查用户名是否重复
@@ -91,6 +94,45 @@ public class EmployeeController {
 
     }
 
+    /**
+     * 根据员工Id查询员工信息
+     * @param empId
+     * @return
+     */
+    @ResponseBody
+    @GetMapping("/emp/{empId}")
+    public Msg getEmpById(@PathVariable("empId") Integer empId) {
+        //empId 判空
+
+        Employee employee = employeeService.getEmpById(empId);
+        return Msg.success().add("employee",employee);
+    }
+
+    /**
+     * 员工更新方法
+     * @param employee
+     * @param result
+     * @return
+     */
+    @ResponseBody
+    @PutMapping("/emp/{empId}")
+    public Msg UpdateEmp(@Valid Employee employee, BindingResult result, HttpServletRequest request) {
+        //如果有数据校验失败
+        if(result.hasErrors()){
+            //校验失败以后应该返回失败，在模态框中显示校验失败的错误信息
+            HashMap<String, Object> map = new HashMap<>();
+            List<FieldError> fieldErrors = result.getFieldErrors();
+            for (FieldError fieldError:fieldErrors) {
+                System.out.println("错误的字段名"+fieldError.getField());
+                System.out.println("错误信息"+fieldError.getDefaultMessage());
+                map.put(fieldError.getField(),fieldError.getDefaultMessage());
+            }
+            return Msg.fail().add("errorFields",map);
+        }else{
+            Integer count = employeeService.UpdateEmp(employee);
+            return Msg.success();
+        }
+    }
 
 //    @RequestMapping("/emps")
 //    public String getEmps(@RequestParam(value = "pn", defaultValue = "1") Integer pn, Model model) {

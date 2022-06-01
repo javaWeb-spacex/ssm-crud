@@ -25,7 +25,8 @@ public class DeptmentController {
 
     @ResponseBody
     @RequestMapping("/depts")
-    public Msg getDepts(){
+    public Msg getDepts() throws InterruptedException {
+//        Thread.sleep(1000);
         List<Department> depts=departmentService.getDepts();
         return Msg.success().add("depts",depts);
     }

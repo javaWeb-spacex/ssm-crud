@@ -16,4 +16,8 @@ public interface EmployeeService {
     Integer saveEmp(Employee employee);
 
     boolean checkempName(String empName);
+
+    Employee getEmpById(Integer empId);
+
+    Integer UpdateEmp(Employee employee);
 }
