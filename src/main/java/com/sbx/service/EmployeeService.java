@@ -12,4 +12,8 @@ import java.util.List;
  */
 public interface EmployeeService {
     List<Employee> getAll();
+
+    Integer saveEmp(Employee employee);
+
+    boolean checkempName(String empName);
 }

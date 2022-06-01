@@ -125,6 +125,16 @@
             <version>2.13.2.1</version>
         </dependency>
 
+        <!--
+            JSR303数据校验支持，tomcat7及以上的服务器
+            tomcat 7以下的服务器，el表达式不死新的标准，需要额外的给服务器的lib包中替换新的标准的el
+        -->
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <version>6.1.0.Final</version>
+        </dependency>
+
     </dependencies>
 
     <build>

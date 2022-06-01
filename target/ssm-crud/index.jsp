@@ -6,7 +6,6 @@
   To change this template use File | Settings | File Templates.
 --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <html>
 <head>
     <title>员工列表</title>
@@ -34,6 +33,72 @@
 </head>
 <body>
 
+<!-- 员工添加模态框 -->
+<div class="modal fade" id="empAddModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="myModalLabel">员工添加</h4>
+            </div>
+            <div class="modal-body">
+                <form class="form-horizontal">
+                    <%--empName--%>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">empName:</label>
+                        <div class="col-sm-10">
+                            <input type="text" name="empName" class="form-control" id="empName_add_input"
+                                   onblur="checkEmpNameValidity('#empName_add_input')"
+                                   placeholder="empName">
+                            <span class="help-block"></span>
+                        </div>
+                    </div>
+
+                    <%--email--%>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">email:</label>
+                        <div class="col-sm-10">
+                            <input type="text" name="email" class="form-control" id="email_add_input"
+                                   onblur="checkEmailValidity('#email_add_input')"
+                                   placeholder="email@qq.com">
+                            <span class="help-block"></span>
+                        </div>
+                    </div>
+
+                    <%--gender--%>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">gender:</label>
+                        <div class="col-sm-10">
+                            <label class="radio-inline">
+                                <input type="radio" name="gender" id="gender1_add_input" value="M" checked="checked"> 男
+                            </label>
+                            <label class="radio-inline">
+                                <input type="radio" name="gender" id="gender2_add_input" value="F"> 女
+                            </label>
+                        </div>
+                    </div>
+
+                    <%--deptName--%>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">deptName:</label>
+                        <div class="col-sm-4">
+                            <%--部门提交部门Id即可--%>
+                            <select class="form-control" name="dId" id="dept_add_select"></select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <%--按钮--%>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" id="emp_save_btn">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <%--搭建显示页面--%>
 <div class="container">
 
@@ -48,8 +113,12 @@
     <%--按钮--%>
     <div class="row">
         <div class="col-md-4 col-md-offset-8">
-            <button class="btn btn-primary">新增</button>
-            <button class="btn btn-danger">刪除</button>
+            <button class="btn btn-primary" id="emp_add_modal_btn">
+                <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>新增
+            </button>
+            <button class="btn btn-danger">
+                <span class="glyphicon glyphicon-trash" aria-hidden="true"></span>刪除
+            </button>
         </div>
     </div>
 
@@ -74,21 +143,31 @@
 
     <%--显示分页信息--%>
     <div class="row">
-
         <%--分页文字信息--%>
         <div class="col-md-6" id="page_info_area"></div>
 
         <%--分页条--%>
-        <div class="col-md-5 col-md-offset-7" id="page_nav_area"></div>
+            <div class="col-md-5 col-md-offset-7" id="page_nav_area"></div>
     </div>
 </div>
+
 <script type="text/javascript">
+    //页面总记录数
+    var totalRecord = 0;
+    //页面显示条数
+    var pageSize = 5;
+
+    //=======================================================查询页面=============================================================================
     //页面加载完成，直接发送一个ajax请求，要到分页数据
     $(function () {
         //去首页
         to_page(1);
     });
 
+    /**
+     * 跳转到指定页面
+     * @param pn
+     */
     function to_page(pn) {
         $.ajax({
             url: "${APP_PATH}/emps",
@@ -97,14 +176,11 @@
             success: function (result) {
                 //1.解析并显示员工数据
                 build_emps_table(result)
-
                 //2.解析并显示分页信息
                 build_page_info(result);
-
                 //3.解析并显示分页条
                 build_page_nav(result);
             }
-
         });
     }
 
@@ -117,7 +193,6 @@
         $("#emps_table tbody").empty();
         var emps = result.extend.pageInfo.list;
         $.each(emps, function (index, item) {
-
             var empIdTd = $("<td></td>").append(item.empId);
             var empNameTd = $("<td></td>").append(item.empName);
             var gender = item.gender == 'M' ? '男' : '女';
@@ -126,9 +201,9 @@
             var deptNameTd = $("<td></td>").append(item.department.deptName);
 
             var editBtn = $("<button></button>").addClass("btn btn-primary btn-sm")
-                .append($("<span></span>").addClass("glyphicon glyphicon-pencil").append("编辑"));
+                .append($("<span></span>").addClass("glyphicon glyphicon-pencil")).append("编辑");
             var deleteBtn = $("<button></button>").addClass("btn btn-danger btn-sm")
-                .append($("<span></span>").addClass("glyphicon glyphicon-trash").append("删除"));
+                .append($("<span></span>").addClass("glyphicon glyphicon-trash")).append("删除");
             var btnTd = $("<td></td>").append(editBtn).append(" ").append(deleteBtn);
 
             $("<tr></tr>").append(empIdTd)
@@ -138,7 +213,7 @@
                 .append(deptNameTd)
                 .append(btnTd)
                 .appendTo("#emps_table tbody");
-        })
+        });
     }
 
 
@@ -150,7 +225,9 @@
         //清空原来的数据
         $("#page_info_area").empty();
         var pageInfo = result.extend.pageInfo;
-        $("#page_info_area").append("当前" + pageInfo.pageNum + "页，总共" + pageInfo.pages + "页，总共" + pageInfo.total + "条记录")
+        totalRecord = pageInfo.total;
+        pageSize = pageInfo.pageSize;
+        $("#page_info_area").append("当前" + pageInfo.pageNum + "页，总共" + pageInfo.pages + "页，总共" + pageInfo.total + "条记录");
     }
 
     /**
@@ -160,16 +237,17 @@
     function build_page_nav(result) {
         //清空原来的数据
         $("#page_nav_area").empty();
-        var pageInfo = result.extend.pageInfo;
 
-        //构建元素
+        var pageInfo = result.extend.pageInfo;
+        //构建首页、上一页元素
         var ul = $("<ul></ul>").addClass("pagination");
         var firstPageLi = $("<li></li>").append($("<a></a>").append("首页"));
         var prePageLi = $("<li></li>").append($("<a></a>").append("&laquo;"));
+
         if (pageInfo.hasPreviousPage == false) {
-            firstPageLi.addClass("disabled")
-            prePageLi.addClass("disabled")
-        }else{
+            firstPageLi.addClass("disabled");
+            prePageLi.addClass("disabled");
+        } else {
             //为元素添加点击事件
             firstPageLi.click(function () {
                 to_page(1);
@@ -179,14 +257,14 @@
             });
         }
 
-        //构建元素
+        //构建下一页、末页元素
         var nextPageLi = $("<li></li>").append($("<a></a>").append("&raquo;"));
         var lastPageLi = $("<li></li>").append($("<a></a>").append("尾页"));
 
         if (pageInfo.hasNextPage == false) {
-            nextPageLi.addClass("disabled")
-            lastPageLi.addClass("disabled")
-        }else{
+            nextPageLi.addClass("disabled");
+            lastPageLi.addClass("disabled");
+        } else {
             //为元素添加点击事件
             nextPageLi.click(function () {
                 to_page(pageInfo.pageNum + 1);
@@ -196,10 +274,8 @@
             });
         }
 
-
-
+        //将构建的元素添加到分页条中
         ul.append(firstPageLi).append(prePageLi);
-
         $.each(pageInfo.navigatepageNums, function (index, item) {
             var numLi = $("<li></li>").append($("<a></a>").append(item));
             if (pageInfo.pageNum == item) {
@@ -210,10 +286,209 @@
             })
             ul.append(numLi);
         });
-
         ul.append(nextPageLi).append(lastPageLi);
         var nav = $("<nav></nav>").append(ul).attr("aria-label", "Page navigation").appendTo("#page_nav_area");
     }
+
+    /**
+     * 新增按钮触发事件
+     */
+    $("#emp_add_modal_btn").click(function () {
+        //重置表单数据以及样式
+        reset_form("#empAddModal form");
+        //发送ajax请求，查出部门信息，显示在下拉列表中
+        getDepts();
+        //弹出模态框
+        $("#empAddModal").modal({
+            backdrop: 'static',
+        });
+    });
+
+    //=======================================================新增页面=========================================================================================
+    /**
+     * 查出所有的部门信息并显示在下拉列表中
+     */
+    function getDepts() {
+        $.ajax({
+            url: "${APP_PATH}/depts",
+            data: "",
+            type: "GET",
+            success: function (result) {
+                //{"code":100,"msg":"处理成功","extend":{"depts":[{"deptId":1,"deptName":"开发部"},{"deptId":2,"deptName":"测试部"}]}}
+                $.each(result.extend.depts, function () {
+                    var optionEle = $("<option></option>").append(this.deptName).attr("value", this.deptId);
+                    optionEle.appendTo("#dept_add_select");
+                });
+            },
+        });
+    }
+
+    /**
+     * 新增页面-点击保存按钮触发事件
+     */
+    $("#emp_save_btn").click(function () {
+        //用户名数据校验
+        if (checkEmpNameValidity('#empName_add_input') == false) {
+            return false;
+        }
+        //邮箱数据正确性校验
+        if (checkEmailValidity('#email_add_input') == false) {
+            return false;
+        }
+
+        //将模态框中填写的表单数据提交给服务器进行保存
+        $.ajax({
+            url: "${APP_PATH}/emp",
+            data: $("#empAddModal form").serialize(),
+            type: "POST",
+            success: function (result) {
+                if (result.code == 100) {
+                    //关闭模态框
+                    $("#empAddModal").modal("hide");
+                    //来到最后一页，显示刚才的数据
+                    to_page(Math.ceil((totalRecord + 1) / pageSize));
+                } else {
+                    //显示失败信息
+                    if (result.extend.errorFields.email != undefined) {
+                        //显示邮箱错误信息
+                        show_validate_msg("#email_add_input", "error", result.extend.errorFields.email);
+                    }
+                    if (result.extend.errorFields.empName != undefined) {
+                        //显示用户名错误信息
+                        show_validate_msg("#empName_add_input", "error", result.extend.errorFields.empName);
+                    }
+                }
+            },
+        });
+    });
+
+    /**
+     * 显示校验结果的提示信息
+     * @param ele
+     * @param status
+     * @param msg
+     */
+    function show_validate_msg(ele, status, msg) {
+        //清空当前元素的校验状态
+        $(ele).parent().removeClass("has-success has-error");
+        $(ele).next("span").text("");
+
+        if ("success" == status) {
+            $(ele).parent().addClass("has-success");
+        } else if ("error" == status) {
+            $(ele).parent().addClass("has-error");
+        }
+        $(ele).next("span").text(msg);
+    }
+
+
+    /**
+     * 重置表单
+     */
+    function reset_form(ele) {
+        //清除表单数据(JQ没有该重置方法，该重置方法是document对象的)
+        $(ele)[0].reset();
+        $("#dept_add_select").empty();
+        //清空表单的样式
+        $(ele).find("*").removeClass("has-success has-error");
+        $(ele).find(".help-block").text("");
+    }
+
+
+    /**
+     * 用户名重复性校验
+     */
+    function checkEmpName(ele) {
+        //发送ajax请求校验用户名是否可用
+        var flag = false;
+        $.ajax({
+            url: "${APP_PATH}/checkEmpName",
+            data: "empName=" + $(ele).val(),
+            type: "GET",
+            async: false,
+            success: function (result) {
+                if (result.code == 100) {
+                    show_validate_msg(ele, "success", "用户名可用");
+                    flag = true;
+                } else {
+                    show_validate_msg(ele, "error", result.extend.va_msg);
+                    flag = false;
+                }
+            },
+        });
+        return flag;
+    }
+
+    /**
+     * 用户名数据校验(正确性、重复性)
+     */
+    function checkEmpNameValidity(ele) {
+        //清空原來的样式
+        $(ele).empty();
+        //校验用户名信息正确性
+        var empName = $(ele).val();
+        var regName = /^[\u2E80-\u9FFFa-zA-Z0-9_-]{2,16}$/;
+        if (!regName.test(empName)) {
+            show_validate_msg(ele, "error", "用户名可以是2-16位英文，数字，下划线，减号，中文");
+            return false;
+        }
+        show_validate_msg(ele, "success", "");
+        //用户名重复性校验
+        if (checkEmpName(ele) == false) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * 邮箱数据正确性校验
+     */
+    function checkEmailValidity(ele) {
+        //清空原來的样式
+        $(ele).empty();
+        //校验用户名信息正确性
+        var email = $(ele).val();
+        var regEmail = /^([a-z0-9_\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})$/;
+        if (!regEmail.test(email)) {
+            show_validate_msg(ele, "error", "邮箱格式不正确");
+            return false;
+        }
+        show_validate_msg(ele, "success", "");
+        return true;
+    }
+
+    /* /!**
+      * 前端数据正确性校验方法（新增）
+      *!/
+
+     function validata_add_from() {
+         //校验用户名信息
+         var empName = $("#empName_add_input").val();
+         var regName = /^[\u2E80-\u9FFFa-zA-Z0-9_-]{2,16}$/;
+         //清空
+         $("#empName_add_input").empty();
+         if (!regName.test(empName)) {
+             // alert("用户名可以是2-16位英文，数字，下划线，减号，中文");
+             show_validate_msg("#empName_add_input", "error", "用户名可以是2-16位英文，数字，下划线，减号，中文");
+             return false;
+         } else {
+             show_validate_msg("#empName_add_input", "success", "");
+         }
+
+         //校验邮箱信息
+         var email = $("#email_add_input").val();
+         var regEmail = /^([a-z0-9_\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})$/;
+         $("#email_add_input").empty();
+         if (!regEmail.test(email)) {
+             //alert("邮箱格式不正确");
+             show_validate_msg("#email_add_input", "error", "邮箱格式不正确");
+             return false;
+         } else {
+             show_validate_msg("#email_add_input", "success", "");
+         }
+         return true;
+     }*/
+
 
 </script>
 
